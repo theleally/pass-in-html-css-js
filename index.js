@@ -61,7 +61,40 @@ let attendees = [
   }
 ];
 
+const addAttendee = (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+  const attendee = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    createdAt: new Date(),
+    checkedInAt: null,
+  }
+  const attendeeExists = attendees.find((p) => {
+    return p.email == attendee.email
+  })
+  
+  if(attendeeExists) {
+    alert("Email já cadastrado")
+    return
+  }
+
+  attendees = [attendee, ...attendees]
+  updateAttendeeList(attendees);
+
+  event.target.querySelector('[name="name"]').value = ""
+  event.target.querySelector('[name="email"]').value = ""
+}
+
 const createAttendee = (attendee) => {
+  const createdAt = dayjs(Date.now()).to(attendee.createdAt);
+  let checkedInAt = dayjs(Date.now()).to(attendee.checkedInAt);
+
+  if(attendee.checkedInAt == null) {
+    checkedInAt = `<button data-email="${attendee.email}" onclick="checkIn(event)">Confirmar check-in<button/>`
+  }
+
   return `
     <tr>
       <td>
@@ -74,13 +107,26 @@ const createAttendee = (attendee) => {
         </small>
       </td>
       <td>
-        ${dayjs(Date.now()).to(attendee.createdAt)}
+        ${createdAt}
       </td>
       <td>
-        ${dayjs(Date.now()).to(attendee.checkedInAt)}
+        ${checkedInAt}
       </td>
   </tr>
   `
+}
+
+const checkIn = (event) => {
+  const confirmMessage = "Tem certeza que deseja fazer o check-in?"
+  if(confirm(confirmMessage) == false) {
+    return
+  }
+
+  const attendee = attendees.find((p) => {
+    return p.email == event.target.dataset.email
+  })
+  attendee.checkedInAt = new Date();
+  updateAttendeeList(attendees);
 }
 
 const updateAttendeeList = (attendees) => {
